@@ -2,7 +2,7 @@
 
 namespace MovieFinder.Business.Dtos
 {
-    public class ImdbMovieResult
+    public class AggregatedMovieResult
     {
         public string Id { get; set; }
 
@@ -27,5 +27,7 @@ namespace MovieFinder.Business.Dtos
         public List<string> KeywordList { get; set; }
 
         public string ErrorMessage { get; set; }
+
+        public YoutubeTrailers YoutubeTrailers { get; set; }
     }
 }

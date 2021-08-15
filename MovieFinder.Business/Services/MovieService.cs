@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
 using Microsoft.Extensions.Options;
 using MovieFinder.Business.Dtos;
 using MovieFinder.Business.Models;
@@ -21,6 +22,8 @@ namespace MovieFinder.Business.Services
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _imdbApiKey;
+        private readonly string _youtubeApplicationName;
+        private readonly string _youtubeApiKey;
         private readonly MovieFinderDbContext _context;
 
         public MovieService
@@ -32,12 +35,14 @@ namespace MovieFinder.Business.Services
         {
             _httpClientFactory = httpClientFactory;
             _imdbApiKey = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Imdb")?.Secret;
+            _youtubeApplicationName = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Youtube")?.ApplicationName;
+            _youtubeApiKey = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Youtube")?.Secret;
             _context = context;
         }
 
         public async Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year = null)
         {
-            string requestUrl = BuildRequestUrl("SearchTitle", movieTitle);
+            string requestUrl = BuildImdbRequestUrl("SearchTitle", movieTitle);
 
             if (year.HasValue)
             {
@@ -49,17 +54,17 @@ namespace MovieFinder.Business.Services
             return result;
         }
 
-        public async Task<ImdbMovieResult> GetImdbMovie(string imdbId)
+        public async Task<AggregatedMovieResult> GetImdbMovie(string imdbId)
         {
             // TODO: check the cache first - if any don't save/read to DB or go to IMDB.
             // TODO: check the database second - if any don't go to IMDB.
             // TODO: check the IMDB last - if any give an option to update the cache and the database.
 
-            string requestUrl = BuildRequestUrl("Title", imdbId);
+            // string requestUrl = BuildImdbRequestUrl("Title", imdbId);
 
-            // var result = await GetResponseFromImdb<ImdbMovieResult>(requestUrl);
+            // var result = await GetResponseFromImdb<AggregatedMovieResult>(requestUrl);
             
-            var result = new ImdbMovieResult
+            var result = new AggregatedMovieResult
             {
                 Id = "tt1375666",
                 Title = "Inception",
@@ -72,6 +77,10 @@ namespace MovieFinder.Business.Services
                 ErrorMessage = ""
             };
 
+            var youtubeTrailers = await GetYoutubeTrailers($"{result.Title} {result.Year}");
+
+            result.YoutubeTrailers = youtubeTrailers;
+
             if (!string.IsNullOrEmpty(result.ErrorMessage))
             {
                 throw new Exception("Unable to find any results on IMDB");
@@ -82,7 +91,7 @@ namespace MovieFinder.Business.Services
             return result;
         }
 
-        private string BuildRequestUrl(string action, string searchValue)
+        private string BuildImdbRequestUrl(string action, string searchValue)
         {
             if (string.IsNullOrEmpty(_imdbApiKey))
             {
@@ -111,42 +120,73 @@ namespace MovieFinder.Business.Services
             throw new Exception("Unable to get the response from IMDB API.");
         }
 
-        private async Task<int> SaveMovieAsync(ImdbMovieResult imdbMovieResult)
+        private async Task<int> SaveMovieAsync(AggregatedMovieResult aggregatedMovieResult)
         {
             // TODO: add additional fields to the database.
             var movie = new Movie
             {
-                Name = imdbMovieResult.FullTitle,
+                Name = aggregatedMovieResult.FullTitle,
                 ImdbData = new ImdbData
                 {
-                    ImdbId = imdbMovieResult.Id,
-                    MovieName = imdbMovieResult.FullTitle,
-                    ReleaseYear = int.TryParse(imdbMovieResult.Year, out var year) ? year : 0
+                    ImdbId = aggregatedMovieResult.Id,
+                    MovieName = aggregatedMovieResult.FullTitle,
+                    ReleaseYear = int.TryParse(aggregatedMovieResult.Year, out var year) ? year : 0
                 },
-                VideoData = new List<VideoData>
-                {
-                    new VideoData
-                    {
-                        VideoSourceEnum = VideoSourceEnum.YouTube,
-                        VideoUrl = "https://www.youtube.com/watch?v=YoHD9XEInc0"
-                    },
-                    new VideoData
-                    {
-                        VideoSourceEnum = VideoSourceEnum.Vimeo,
-                        VideoUrl = "https://vimeo.com/47074017"
-                    },
-                    new VideoData
-                    {
-                        VideoSourceEnum = VideoSourceEnum.DailyMotion,
-                        VideoUrl = "https://www.dailymotion.com/video/x83csxx"
-                    }
-                }
+                VideoData = new List<VideoData>()
             };
+
+            foreach (var youtubeTrailer in aggregatedMovieResult.YoutubeTrailers.YoutubeResults)
+            {
+                movie.VideoData.Add(new VideoData
+                {
+                    VideoSourceEnum = VideoSourceEnum.YouTube,
+                    VideoUrl = $"https://www.youtube.com/watch?v={youtubeTrailer.Id}",
+                    ThumbnailUrl = youtubeTrailer.ThumbnailUrl,
+                    Name = youtubeTrailer.Name
+                });
+            }
 
             await _context.Movies.AddAsync(movie);
             await _context.SaveChangesAsync();
             
             return movie.Id;
+        }
+
+        private async Task<YoutubeTrailers> GetYoutubeTrailers(string movieName)
+        {
+            var youTubeService = new YouTubeService(new BaseClientService.Initializer
+            {
+                ApplicationName = _youtubeApplicationName,
+                ApiKey = _youtubeApiKey
+            });
+
+            var searchRequest = youTubeService.Search.List("snippet");
+            searchRequest.Q = movieName;
+            searchRequest.MaxResults = 10;
+
+            var searchResponse = await searchRequest.ExecuteAsync();
+
+            var trailerResults = new List<YoutubeResult>();
+            if (searchResponse.Items != null)
+            {
+                foreach (var item in searchResponse.Items)
+                {
+                    if (item.Id.Kind == "youtube#video")
+                    {
+                        trailerResults.Add(new YoutubeResult
+                        {
+                            Id = item.Id.VideoId,
+                            Name = item.Snippet.Title,
+                            ThumbnailUrl = item.Snippet.Thumbnails.High.Url
+                        });
+                    }
+                }
+            }
+
+            return new YoutubeTrailers
+            {
+                YoutubeResults = trailerResults
+            };
         }
     }
 }

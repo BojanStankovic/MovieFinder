@@ -9,7 +9,7 @@ using MovieFinder.Dal;
 namespace MovieFinder.Dal.Migrations
 {
     [DbContext(typeof(MovieFinderDbContext))]
-    [Migration("20210815144243_Initial")]
+    [Migration("20210815163235_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -81,6 +81,12 @@ namespace MovieFinder.Dal.Migrations
 
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("VideoSourceEnum")
                         .HasColumnType("int")
