@@ -21,6 +21,11 @@ namespace MovieFinder.Dal.Configurations
                 .Property(m => m.VideoSourceEnum)
                 .HasColumnName("VideoSourceEnum")
                 .IsRequired();
+
+            modelBuilder.Entity<VideoData>()
+                .HasOne(vd => vd.Movie)
+                .WithMany(m => m.VideoData)
+                .HasForeignKey(vd => vd.MovieId);
         }
     }
 }

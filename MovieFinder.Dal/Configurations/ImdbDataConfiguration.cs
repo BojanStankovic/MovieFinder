@@ -26,6 +26,11 @@ namespace MovieFinder.Dal.Configurations
                 .Property(m => m.ReleaseYear)
                 .HasColumnName("ReleaseYear")
                 .IsRequired();
+
+            modelBuilder.Entity<ImdbData>()
+                .HasOne(i => i.Movie)
+                .WithOne(m => m.ImdbData)
+                .HasForeignKey<Movie>(m => m.ImdbDataId);
         }
     }
 }

@@ -9,7 +9,7 @@ using MovieFinder.Dal;
 namespace MovieFinder.Dal.Migrations
 {
     [DbContext(typeof(MovieFinderDbContext))]
-    [Migration("20210815104016_Initial")]
+    [Migration("20210815144243_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,8 +23,10 @@ namespace MovieFinder.Dal.Migrations
             modelBuilder.Entity("MovieFinder.Dal.Models.ImdbData", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id");
+                        .HasColumnName("Id")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ImdbId")
                         .IsRequired()
@@ -53,6 +55,9 @@ namespace MovieFinder.Dal.Migrations
                         .HasColumnName("Id")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("ImdbDataId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -60,14 +65,22 @@ namespace MovieFinder.Dal.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ImdbDataId")
+                        .IsUnique();
+
                     b.ToTable("Movies");
                 });
 
             modelBuilder.Entity("MovieFinder.Dal.Models.VideoData", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id");
+                        .HasColumnName("Id")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
 
                     b.Property<int>("VideoSourceEnum")
                         .HasColumnType("int")
@@ -80,35 +93,40 @@ namespace MovieFinder.Dal.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("MovieId");
+
                     b.ToTable("VideoData");
                 });
 
-            modelBuilder.Entity("MovieFinder.Dal.Models.ImdbData", b =>
+            modelBuilder.Entity("MovieFinder.Dal.Models.Movie", b =>
                 {
-                    b.HasOne("MovieFinder.Dal.Models.Movie", "Movie")
-                        .WithOne("ImdbData")
-                        .HasForeignKey("MovieFinder.Dal.Models.ImdbData", "Id")
+                    b.HasOne("MovieFinder.Dal.Models.ImdbData", "ImdbData")
+                        .WithOne("Movie")
+                        .HasForeignKey("MovieFinder.Dal.Models.Movie", "ImdbDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Movie");
+                    b.Navigation("ImdbData");
                 });
 
             modelBuilder.Entity("MovieFinder.Dal.Models.VideoData", b =>
                 {
                     b.HasOne("MovieFinder.Dal.Models.Movie", "Movie")
                         .WithMany("VideoData")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Movie");
                 });
 
+            modelBuilder.Entity("MovieFinder.Dal.Models.ImdbData", b =>
+                {
+                    b.Navigation("Movie");
+                });
+
             modelBuilder.Entity("MovieFinder.Dal.Models.Movie", b =>
                 {
-                    b.Navigation("ImdbData");
-
                     b.Navigation("VideoData");
                 });
 #pragma warning restore 612, 618

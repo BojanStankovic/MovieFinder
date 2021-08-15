@@ -14,7 +14,8 @@ namespace MovieFinder.Business.Services.Interfaces
         Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year);
 
         /// <summary>
-        /// Gets an exact movie from the IMDB based on the IMDB entry ID
+        /// Gets an exact movie from the IMDB based on the IMDB entry ID.
+        /// As a part of the data flow, the newly fetched data form IMDB is automatically saved to the application's database.
         /// </summary>
         /// <param name="imdbId"></param>
         /// <returns></returns>

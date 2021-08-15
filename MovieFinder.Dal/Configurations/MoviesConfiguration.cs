@@ -16,16 +16,6 @@ namespace MovieFinder.Dal.Configurations
                 .Property(m => m.Name)
                 .HasColumnName("Name")
                 .IsRequired();
-
-            modelBuilder.Entity<Movie>()
-                .HasOne(m => m.ImdbData)
-                .WithOne(i => i.Movie)
-                .HasForeignKey<ImdbData>(m => m.Id);
-
-            modelBuilder.Entity<Movie>()
-                .HasMany(m => m.VideoData)
-                .WithOne(i => i.Movie)
-                .HasForeignKey(vd => vd.Id);
         }
     }
 }

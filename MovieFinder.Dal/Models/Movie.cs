@@ -8,6 +8,8 @@ namespace MovieFinder.Dal.Models
 
         public string Name { get; set; }
 
+        public int ImdbDataId { get; set; }
+
         // Navigation properties
         public ImdbData ImdbData { get; set; }
 

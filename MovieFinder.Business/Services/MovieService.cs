@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Extensions.Options;
 using MovieFinder.Business.Dtos;
 using MovieFinder.Business.Models;
 using MovieFinder.Business.Services.Interfaces;
+using MovieFinder.Common.Enums;
+using MovieFinder.Dal;
+using MovieFinder.Dal.Models;
 using Newtonsoft.Json;
 
 namespace MovieFinder.Business.Services
@@ -16,15 +21,18 @@ namespace MovieFinder.Business.Services
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _imdbApiKey;
+        private readonly MovieFinderDbContext _context;
 
         public MovieService
         (
             IHttpClientFactory httpClientFactory,
-            IOptions<ApiKeys> apiKeysOptions
+            IOptions<ApiKeys> apiKeysOptions,
+            MovieFinderDbContext context
         )
         {
             _httpClientFactory = httpClientFactory;
             _imdbApiKey = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Imdb")?.Secret;
+            _context = context;
         }
 
         public async Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year = null)
@@ -43,9 +51,33 @@ namespace MovieFinder.Business.Services
 
         public async Task<ImdbMovieResult> GetImdbMovie(string imdbId)
         {
+            // TODO: check the cache first - if any don't save/read to DB or go to IMDB.
+            // TODO: check the database second - if any don't go to IMDB.
+            // TODO: check the IMDB last - if any give an option to update the cache and the database.
+
             string requestUrl = BuildRequestUrl("Title", imdbId);
 
-            var result = await GetResponseFromImdb<ImdbMovieResult>(requestUrl);
+            // var result = await GetResponseFromImdb<ImdbMovieResult>(requestUrl);
+            
+            var result = new ImdbMovieResult
+            {
+                Id = "tt1375666",
+                Title = "Inception",
+                FullTitle = "Inception (2010)",
+                Type = "Movie",
+                Year = "2010",
+                Plot = "Dom Cobb is a skilled thief, the absolute best in the dangerous art of extraction, stealing valuable secrets from deep within the subconscious during the dream state, when the mind is at its most vulnerable. Cobb&#39;s rare ability has made him a coveted player in this treacherous new world of corporate espionage, but it has also made him an international fugitive and cost him everything he has ever loved. Now Cobb is being offered a chance at redemption. One last job could give him his life back but only if he can accomplish the impossible, inception. Instead of the perfect heist, Cobb and his team of specialists have to pull off the reverse: their task is not to steal an idea, but to plant one. If they succeed, it could be the perfect crime. But no amount of careful planning or expertise can prepare the team for the dangerous enemy that seems to predict their every move. An enemy that only Cobb could have seen coming.\"",
+                Genres = "Action, Adventure, Sci-Fi",
+                Countries = "USA, UK",
+                ErrorMessage = ""
+            };
+
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                throw new Exception("Unable to find any results on IMDB");
+            }
+
+            await SaveMovieAsync(result);
 
             return result;
         }
@@ -77,6 +109,44 @@ namespace MovieFinder.Business.Services
             }
             
             throw new Exception("Unable to get the response from IMDB API.");
+        }
+
+        private async Task<int> SaveMovieAsync(ImdbMovieResult imdbMovieResult)
+        {
+            // TODO: add additional fields to the database.
+            var movie = new Movie
+            {
+                Name = imdbMovieResult.FullTitle,
+                ImdbData = new ImdbData
+                {
+                    ImdbId = imdbMovieResult.Id,
+                    MovieName = imdbMovieResult.FullTitle,
+                    ReleaseYear = int.TryParse(imdbMovieResult.Year, out var year) ? year : 0
+                },
+                VideoData = new List<VideoData>
+                {
+                    new VideoData
+                    {
+                        VideoSourceEnum = VideoSourceEnum.YouTube,
+                        VideoUrl = "https://www.youtube.com/watch?v=YoHD9XEInc0"
+                    },
+                    new VideoData
+                    {
+                        VideoSourceEnum = VideoSourceEnum.Vimeo,
+                        VideoUrl = "https://vimeo.com/47074017"
+                    },
+                    new VideoData
+                    {
+                        VideoSourceEnum = VideoSourceEnum.DailyMotion,
+                        VideoUrl = "https://www.dailymotion.com/video/x83csxx"
+                    }
+                }
+            };
+
+            await _context.Movies.AddAsync(movie);
+            await _context.SaveChangesAsync();
+            
+            return movie.Id;
         }
     }
 }
