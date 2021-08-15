@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace MovieFinder
+namespace MovieFinder.Api
 {
     public class Program
     {

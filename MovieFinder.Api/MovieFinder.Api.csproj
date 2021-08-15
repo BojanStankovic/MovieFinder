@@ -12,4 +12,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MovieFinder.Business\MovieFinder.Business.csproj" />
+  </ItemGroup>
+
 </Project>
