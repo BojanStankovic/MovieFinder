@@ -10,6 +10,8 @@ namespace MovieFinder.Dal.Models
 
         public VideoSourceEnum VideoSourceEnum { get; set; }
 
+        public int MovieId { get; set; }
+
         // Navigation properties
         public Movie Movie { get; set; }
     }
