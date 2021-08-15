@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31605.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieFinder.Api", "MovieFinder.Api\MovieFinder.Api.csproj", "{4EE86194-06B4-4480-A258-9B5F48C33DD9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieFinder.Api", "MovieFinder.Api\MovieFinder.Api.csproj", "{4EE86194-06B4-4480-A258-9B5F48C33DD9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieFinder.Dal", "MovieFinder.Dal\MovieFinder.Dal.csproj", "{909A06BC-2E06-4645-A9D5-048CA96CA279}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieFinder.Business", "MovieFinder.Business\MovieFinder.Business.csproj", "{C49BC553-267A-477D-88B8-EF3EB516106C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieFinder.Common", "MovieFinder.Common\MovieFinder.Common.csproj", "{2BE029B7-0A60-486A-9ED9-F89368130E20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{4EE86194-06B4-4480-A258-9B5F48C33DD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EE86194-06B4-4480-A258-9B5F48C33DD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EE86194-06B4-4480-A258-9B5F48C33DD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{909A06BC-2E06-4645-A9D5-048CA96CA279}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{909A06BC-2E06-4645-A9D5-048CA96CA279}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{909A06BC-2E06-4645-A9D5-048CA96CA279}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{909A06BC-2E06-4645-A9D5-048CA96CA279}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C49BC553-267A-477D-88B8-EF3EB516106C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C49BC553-267A-477D-88B8-EF3EB516106C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C49BC553-267A-477D-88B8-EF3EB516106C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C49BC553-267A-477D-88B8-EF3EB516106C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BE029B7-0A60-486A-9ED9-F89368130E20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BE029B7-0A60-486A-9ED9-F89368130E20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BE029B7-0A60-486A-9ED9-F89368130E20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BE029B7-0A60-486A-9ED9-F89368130E20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
