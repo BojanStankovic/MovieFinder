@@ -80,6 +80,12 @@ namespace MovieFinder.Dal.Migrations
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("VideoSourceEnum")
                         .HasColumnType("int")
                         .HasColumnName("VideoSourceEnum");

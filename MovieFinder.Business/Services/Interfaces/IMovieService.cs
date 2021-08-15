@@ -19,6 +19,6 @@ namespace MovieFinder.Business.Services.Interfaces
         /// </summary>
         /// <param name="imdbId"></param>
         /// <returns></returns>
-        Task<ImdbMovieResult> GetImdbMovie(string imdbId);
+        Task<AggregatedMovieResult> GetImdbMovie(string imdbId);
     }
 }

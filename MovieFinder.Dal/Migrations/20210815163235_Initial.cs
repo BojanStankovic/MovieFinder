@@ -47,7 +47,9 @@ namespace MovieFinder.Dal.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VideoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ThumbnailUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VideoSourceEnum = table.Column<int>(type: "int", nullable: false),
                     MovieId = table.Column<int>(type: "int", nullable: false)
                 },
