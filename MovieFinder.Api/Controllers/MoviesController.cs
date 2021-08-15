@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using MovieFinder.Business.Dtos;
 using MovieFinder.Business.Services.Interfaces;
 
 namespace MovieFinder.Api.Controllers
@@ -25,10 +24,11 @@ namespace MovieFinder.Api.Controllers
         }
 
         // GET api/<MoviesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("{imdbId}")]
+        public async Task<IActionResult> Get(string imdbId)
         {
-            return "value";
+            var result = await _movieService.GetImdbMovie(imdbId);
+            return Ok(result);
         }
 
         // POST api/<MoviesController>

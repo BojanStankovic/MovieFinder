@@ -12,8 +12,10 @@ namespace MovieFinder.Business.Services
 {
     public class MovieService : IMovieService
     {
+        private const string BaseImdbUrl = @"https://imdb-api.com/en/API";
+
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IOptions<ApiKeys> _apiKeysOptions;
+        private readonly string _imdbApiKey;
 
         public MovieService
         (
@@ -22,21 +24,44 @@ namespace MovieFinder.Business.Services
         )
         {
             _httpClientFactory = httpClientFactory;
-            _apiKeysOptions = apiKeysOptions;
+            _imdbApiKey = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Imdb")?.Secret;
         }
 
         public async Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year = null)
         {
-            string baseImdbUrl = @"https://imdb-api.com/en/API";
-            string imdbAction = @"SearchTitle";
-            string imdbApiKey = _apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Imdb")?.Secret;
-            string requestUrl = $"{baseImdbUrl}/{imdbAction}/{imdbApiKey}/{movieTitle}";
+            string requestUrl = BuildRequestUrl("SearchTitle", movieTitle);
 
             if (year.HasValue)
             {
-                requestUrl = requestUrl + ($" {year}");
+                requestUrl += ($" {year}");
             }
+            
+            var result = await GetResponseFromImdb<ImdbTitleResults>(requestUrl);
 
+            return result;
+        }
+
+        public async Task<ImdbMovieResult> GetImdbMovie(string imdbId)
+        {
+            string requestUrl = BuildRequestUrl("Title", imdbId);
+
+            var result = await GetResponseFromImdb<ImdbMovieResult>(requestUrl);
+
+            return result;
+        }
+
+        private string BuildRequestUrl(string action, string searchValue)
+        {
+            if (string.IsNullOrEmpty(_imdbApiKey))
+            {
+                throw new Exception("IMDB API key is missing.");
+            }
+            
+            return $"{BaseImdbUrl}/{action}/{_imdbApiKey}/{searchValue}";
+        }
+
+        private async Task<TResult> GetResponseFromImdb<TResult>(string requestUrl)
+        {
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
 
             request.Headers.Add("Accept", "application/json");
@@ -48,7 +73,7 @@ namespace MovieFinder.Business.Services
             if (response.IsSuccessStatusCode)
             {
                 var result = response.Content.ReadAsStringAsync().Result;
-                return JsonConvert.DeserializeObject<ImdbTitleResults>(result);
+                return JsonConvert.DeserializeObject<TResult>(result);
             }
             
             throw new Exception("Unable to get the response from IMDB API.");
