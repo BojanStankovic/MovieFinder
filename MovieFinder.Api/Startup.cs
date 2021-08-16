@@ -1,4 +1,6 @@
 using System;
+using System.Reflection;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +44,8 @@ namespace MovieFinder.Api
             });
 
             services.AddControllers();
+
+            services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
 
             // Registers context
             services.AddDbContext<MovieFinderDbContext>(options =>
