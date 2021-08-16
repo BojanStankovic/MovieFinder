@@ -8,6 +8,8 @@
 
         public string MovieName { get; set; }
 
+        public string FullTitle { get; set; }
+
         public int ReleaseYear { get; set; }
 
         // Navigation properties
