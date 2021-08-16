@@ -27,11 +27,14 @@ namespace MovieFinder.Business.Services
         private readonly string _youtubeApiKey;
         private readonly MovieFinderDbContext _context;
         private readonly IMemoryCache _cache;
+        private readonly int _cacheAbsoluteExpirationRelativeToNow;
+        private readonly CacheItemPriority _cachePriority;
 
         public MovieService
         (
             IHttpClientFactory httpClientFactory,
             IOptions<ApiKeys> apiKeysOptions,
+            IOptions<CacheSettings> cacheSettings,
             MovieFinderDbContext context,
             IMemoryCache cache
         )
@@ -42,6 +45,8 @@ namespace MovieFinder.Business.Services
             _youtubeApiKey = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Youtube")?.Secret;
             _context = context;
             _cache = cache;
+            _cacheAbsoluteExpirationRelativeToNow = cacheSettings?.Value?.AbsoluteExpirationRelativeToNowInSeconds ?? 0;
+            _cachePriority = cacheSettings?.Value?.Priority ?? CacheItemPriority.Normal;
         }
 
         public async Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year = null)
@@ -201,8 +206,8 @@ namespace MovieFinder.Business.Services
         {
             var options = new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15),
-                Priority = CacheItemPriority.Normal,
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(_cacheAbsoluteExpirationRelativeToNow),
+                Priority = _cachePriority,
                 Size = 1
             };
 
@@ -211,7 +216,6 @@ namespace MovieFinder.Business.Services
 
         private async Task SaveResultAsync(AggregatedMovieResult aggregatedMovieResult)
         {
-            // TODO: add additional fields to the database.
             var movie = new Movie
             {
                 Name = aggregatedMovieResult.Title,
