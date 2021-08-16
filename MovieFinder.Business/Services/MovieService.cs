@@ -12,6 +12,7 @@ using MovieFinder.Business.Dtos;
 using MovieFinder.Business.Helpers;
 using MovieFinder.Business.Models;
 using MovieFinder.Business.Services.Interfaces;
+using MovieFinder.Common;
 using MovieFinder.Common.Enums;
 using MovieFinder.Dal;
 using MovieFinder.Dal.Models;
@@ -62,11 +63,11 @@ namespace MovieFinder.Business.Services
         {
             AggregatedMovieResult result = null;
 
-            result = GetResultFromCache();
+            result = GetCachedResult(imdbId);
 
             if (result is null)
             {
-                result = await GetResultFromDatabase(imdbId);
+                result = await GetSavedResult(imdbId);
             }
             else
             {
@@ -75,26 +76,26 @@ namespace MovieFinder.Business.Services
 
             if (result is null)
             {
-                result = await GetResultFromExternalSources(imdbId);
+                result = await GetNewResult(imdbId);
             }
             else
             {
-                AddResultToCache(result);
+                CacheResult(result);
                 return result;
             }
 
-            await AddResultToDatabaseAsync(result);
-            AddResultToCache(result);
+            await SaveResultAsync(result);
+            CacheResult(result);
 
             return result;
         }
 
-        private AggregatedMovieResult GetResultFromCache()
+        private AggregatedMovieResult GetCachedResult(string imdbId)
         {
-            throw new NotImplementedException();
+             return _cache.Get<AggregatedMovieResult>(imdbId);
         }
 
-        private async Task<AggregatedMovieResult> GetResultFromDatabase(string imdbId)
+        private async Task<AggregatedMovieResult> GetSavedResult(string imdbId)
         {
             var movieResult = await _context.Movies
                 .Where(d => d.ImdbDataId == imdbId)
@@ -130,7 +131,7 @@ namespace MovieFinder.Business.Services
             };
         }
 
-        private async Task<AggregatedMovieResult> GetResultFromExternalSources(string imdbId)
+        private async Task<AggregatedMovieResult> GetNewResult(string imdbId)
         {
             // string requestUrl = UrlBuilders.BuildImdbRequestUrl("Title", imdbId, _imdbApiKey);
             // var result = await GetResponseFromImdb<AggregatedMovieResult>(requestUrl);
@@ -217,12 +218,12 @@ namespace MovieFinder.Business.Services
             };
         }
 
-        private void AddResultToCache(AggregatedMovieResult result)
+        private void CacheResult(AggregatedMovieResult result)
         {
-            throw new NotImplementedException();
+            _cache.Set(result.Id, result);
         }
 
-        private async Task AddResultToDatabaseAsync(AggregatedMovieResult aggregatedMovieResult)
+        private async Task SaveResultAsync(AggregatedMovieResult aggregatedMovieResult)
         {
             // TODO: add additional fields to the database.
             // TODO: make certain fields unique

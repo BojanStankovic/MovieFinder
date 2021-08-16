@@ -1,5 +1,5 @@
 ﻿using System;
-using MovieFinder.Common.Constants;
+using MovieFinder.Common;
 
 namespace MovieFinder.Business.Helpers
 {
@@ -12,12 +12,12 @@ namespace MovieFinder.Business.Helpers
                 throw new Exception("IMDB API key is missing.");
             }
             
-            return $"{UrlConstants.ImdbBaseUrl}/{action}/{imdbApiKey}/{searchValue}";
+            return $"{Constants.ImdbBaseUrl}/{action}/{imdbApiKey}/{searchValue}";
         }
 
         public static string BuildYoutubeWatchVideoUrl(string youtubeVideoId)
         {
-            return $"{UrlConstants.YoutubeWatchVideoUrlPrefix}{youtubeVideoId}";
+            return $"{Constants.YoutubeWatchVideoUrlPrefix}{youtubeVideoId}";
         }
     }
 }
