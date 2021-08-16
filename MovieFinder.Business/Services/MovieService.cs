@@ -27,11 +27,14 @@ namespace MovieFinder.Business.Services
         private readonly string _youtubeApiKey;
         private readonly MovieFinderDbContext _context;
         private readonly IMemoryCache _cache;
+        private readonly int _cacheAbsoluteExpirationRelativeToNow;
+        private readonly CacheItemPriority _cachePriority;
 
         public MovieService
         (
             IHttpClientFactory httpClientFactory,
             IOptions<ApiKeys> apiKeysOptions,
+            IOptions<CacheSettings> cacheSettings,
             MovieFinderDbContext context,
             IMemoryCache cache
         )
@@ -42,15 +45,17 @@ namespace MovieFinder.Business.Services
             _youtubeApiKey = apiKeysOptions?.Value?.ExternalApis?.FirstOrDefault(ea => ea.Name == "Youtube")?.Secret;
             _context = context;
             _cache = cache;
+            _cacheAbsoluteExpirationRelativeToNow = cacheSettings?.Value?.AbsoluteExpirationRelativeToNowInSeconds ?? 0;
+            _cachePriority = cacheSettings?.Value?.Priority ?? CacheItemPriority.Normal;
         }
 
-        public async Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year = null)
+        public async Task<ImdbTitleResults> GetListOfImdbTitles(GetMovieListRequestDto requestModel)
         {
-            string requestUrl = UrlBuilders.BuildImdbRequestUrl("SearchTitle", movieTitle, _imdbApiKey);
+            string requestUrl = UrlBuilders.BuildImdbRequestUrl("SearchTitle", requestModel.MovieTitle, _imdbApiKey);
 
-            if (year.HasValue)
+            if (requestModel.MovieReleaseYear.HasValue)
             {
-                requestUrl += ($" {year}");
+                requestUrl += ($" {requestModel.MovieReleaseYear}");
             }
             
             var result = await GetResponseFromImdb<ImdbTitleResults>(requestUrl);
@@ -91,6 +96,11 @@ namespace MovieFinder.Business.Services
                 .Include(m => m.VideoData)
                 .FirstOrDefaultAsync();
 
+            if (movieResult is null)
+            {
+                return null;
+            }
+
             var youtubeResults = new List<YoutubeResult>();
             foreach (var videoData in movieResult.VideoData)
             {
@@ -111,6 +121,7 @@ namespace MovieFinder.Business.Services
             {
                 Id = movieResult.ImdbDataId,
                 Title = movieResult.ImdbData.MovieName,
+                FullTitle = movieResult.ImdbData.FullTitle,
                 Year = movieResult.ImdbData.ReleaseYear.ToString(),
                 YoutubeTrailers = new YoutubeTrailers
                 {
@@ -124,7 +135,7 @@ namespace MovieFinder.Business.Services
             string requestUrl = UrlBuilders.BuildImdbRequestUrl("Title", imdbId, _imdbApiKey);
             var result = await GetResponseFromImdb<AggregatedMovieResult>(requestUrl);
 
-            var youtubeTrailers = await GetYoutubeTrailers($"{result.Title} {result.Year}");
+            var youtubeTrailers = await GetYoutubeTrailers($"{result.Title} {result.Year} trailer");
 
             result.YoutubeTrailers = youtubeTrailers;
 
@@ -141,7 +152,6 @@ namespace MovieFinder.Business.Services
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
 
             request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
 
             var httpClient = _httpClientFactory.CreateClient();
             var response = await httpClient.SendAsync(request);
@@ -155,7 +165,7 @@ namespace MovieFinder.Business.Services
             throw new Exception("Unable to get the response from IMDB API.");
         }
 
-        private async Task<YoutubeTrailers> GetYoutubeTrailers(string movieName)
+        private async Task<YoutubeTrailers> GetYoutubeTrailers(string searchString)
         {
             var youTubeService = new YouTubeService(new BaseClientService.Initializer
             {
@@ -164,7 +174,7 @@ namespace MovieFinder.Business.Services
             });
 
             var searchRequest = youTubeService.Search.List("snippet");
-            searchRequest.Q = movieName;
+            searchRequest.Q = searchString;
             searchRequest.MaxResults = 10;
 
             var searchResponse = await searchRequest.ExecuteAsync();
@@ -178,7 +188,7 @@ namespace MovieFinder.Business.Services
                     {
                         trailerResults.Add(new YoutubeResult
                         {
-                            VideoUrl = item.Id.VideoId,
+                            VideoUrl = UrlBuilders.BuildYoutubeWatchVideoUrl(item.Id.VideoId),
                             Name = item.Snippet.Title,
                             ThumbnailUrl = item.Snippet.Thumbnails.High.Url
                         });
@@ -196,8 +206,8 @@ namespace MovieFinder.Business.Services
         {
             var options = new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15),
-                Priority = CacheItemPriority.Normal,
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(_cacheAbsoluteExpirationRelativeToNow),
+                Priority = _cachePriority,
                 Size = 1
             };
 
@@ -206,14 +216,14 @@ namespace MovieFinder.Business.Services
 
         private async Task SaveResultAsync(AggregatedMovieResult aggregatedMovieResult)
         {
-            // TODO: add additional fields to the database.
             var movie = new Movie
             {
-                Name = aggregatedMovieResult.FullTitle,
+                Name = aggregatedMovieResult.Title,
                 ImdbData = new ImdbData
                 {
                     ImdbId = aggregatedMovieResult.Id,
-                    MovieName = aggregatedMovieResult.FullTitle,
+                    MovieName = aggregatedMovieResult.Title,
+                    FullTitle = aggregatedMovieResult.FullTitle,
                     ReleaseYear = int.TryParse(aggregatedMovieResult.Year, out var year) ? year : 0
                 },
                 VideoData = new List<VideoData>(),
@@ -226,7 +236,7 @@ namespace MovieFinder.Business.Services
                 movie.VideoData.Add(new VideoData
                 {
                     VideoSourceEnum = VideoSourceEnum.YouTube,
-                    VideoUrl = UrlBuilders.BuildYoutubeWatchVideoUrl(youtubeTrailer.VideoUrl),
+                    VideoUrl = youtubeTrailer.VideoUrl,
                     ThumbnailUrl = youtubeTrailer.ThumbnailUrl,
                     Name = youtubeTrailer.Name
                 });

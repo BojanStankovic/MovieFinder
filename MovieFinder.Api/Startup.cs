@@ -1,9 +1,13 @@
+using System;
+using System.Reflection;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using MovieFinder.Api.Setup;
 using MovieFinder.Business.Models;
@@ -23,8 +27,25 @@ namespace MovieFinder.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Test cors with:
+            //fetch("https://localhost:44373/api/movies/{validImdbId}", {headers: {"Content-Type": "application/json"}}).then(a => a.text()).then(console.log)
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder
+                        .WithOrigins
+                        (
+                            Configuration.GetSection("CorsOrigins")?["Local"],
+                            Configuration.GetSection("CorsOrigins")?["Develop"]
+                         )
+                        .WithHeaders(HeaderNames.AccessControlAllowHeaders, "content-type");
+                });
+            });
 
             services.AddControllers();
+
+            services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()));
 
             // Registers context
             services.AddDbContext<MovieFinderDbContext>(options =>
@@ -38,12 +59,13 @@ namespace MovieFinder.Api
             });
             
             services.Configure<ApiKeys>(Configuration.GetSection("ApiKeys"));
+            services.Configure<CacheSettings>(Configuration.GetSection("CacheSettings"));
 
             services.RegisterServices();
             services.AddMemoryCache(options =>
             {
-                options.SizeLimit = 4096;
-                options.CompactionPercentage = 0.33d;
+                options.SizeLimit = int.Parse(Configuration.GetSection("CacheSettings")?["SizeLimit"] ?? throw new Exception("Missing cache SizeLimit in appsettings.json"));
+                options.CompactionPercentage = double.Parse(Configuration.GetSection("CacheSettings")?["CompactionPercentage"] ?? throw new Exception("Missing cache CompactionPercentage in appsettings.json"));
             });
             services.AddHttpClient();
         }
@@ -61,6 +83,8 @@ namespace MovieFinder.Api
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthorization();
 

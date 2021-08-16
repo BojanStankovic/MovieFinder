@@ -8,10 +8,9 @@ namespace MovieFinder.Business.Services.Interfaces
         /// <summary>
         /// Gets the matching titles from IMDB based on the movie title and year
         /// </summary>
-        /// <param name="movieTitle"></param>
-        /// <param name="year"></param>
+        /// <param name="requestModel"></param>
         /// <returns></returns>
-        Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year);
+        Task<ImdbTitleResults> GetListOfImdbTitles(GetMovieListRequestDto requestModel);
 
         /// <summary>
         /// Gets an exact movie from the IMDB based on the IMDB entry ID.

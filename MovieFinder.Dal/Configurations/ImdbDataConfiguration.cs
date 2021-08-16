@@ -23,6 +23,10 @@ namespace MovieFinder.Dal.Configurations
                 .IsRequired();
 
             modelBuilder.Entity<ImdbData>()
+                .Property(d => d.FullTitle)
+                .HasColumnName("FullTitle");
+
+            modelBuilder.Entity<ImdbData>()
                 .Property(d => d.ReleaseYear)
                 .HasColumnName("ReleaseYear")
                 .IsRequired();

@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MovieFinder.Api.Models;
+using MovieFinder.Business.Dtos;
 using MovieFinder.Business.Services.Interfaces;
 
 namespace MovieFinder.Api.Controllers
@@ -17,9 +19,15 @@ namespace MovieFinder.Api.Controllers
 
         // GET: api/<MoviesController>/title
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] string title, [FromQuery] int? year = null)
+        public async Task<IActionResult> Get([FromQuery] GetMovieListRequestModel requestModel)
         {
-            var result = await _movieService.GetListOfImdbTitles(title, year);
+            var requestDto = new GetMovieListRequestDto
+            {
+                MovieTitle = requestModel.MovieTitle,
+                MovieReleaseYear = requestModel.MovieReleaseYear
+            };
+
+            var result = await _movieService.GetListOfImdbTitles(requestDto);
             return Ok(result);
         }
 
@@ -29,24 +37,6 @@ namespace MovieFinder.Api.Controllers
         {
             var result = await _movieService.GetImdbMovie(imdbId);
             return Ok(result);
-        }
-
-        // POST api/<MoviesController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<MoviesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<MoviesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
         }
     }
 }
