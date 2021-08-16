@@ -16,6 +16,21 @@ namespace MovieFinder.Dal.Configurations
                 .Property(m => m.Name)
                 .HasColumnName("Name")
                 .IsRequired();
+
+            modelBuilder.Entity<Movie>()
+                .Property(m => m.Created)
+                .HasColumnName("Created")
+                .IsRequired();
+
+            modelBuilder.Entity<Movie>()
+                .Property(m => m.Modified)
+                .HasColumnName("Modified")
+                .IsRequired();
+
+            // Indexes
+            modelBuilder.Entity<Movie>()
+                .HasIndex(m => m.ImdbDataId)
+                .IsUnique();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace MovieFinder.Business.Dtos
 
     public class YoutubeResult
     {
-        public string Id { get; set; }
+        public string VideoUrl { get; set; }
 
         public string ThumbnailUrl { get; set; }
 
