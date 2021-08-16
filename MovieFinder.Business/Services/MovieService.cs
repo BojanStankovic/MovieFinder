@@ -12,7 +12,6 @@ using MovieFinder.Business.Dtos;
 using MovieFinder.Business.Helpers;
 using MovieFinder.Business.Models;
 using MovieFinder.Business.Services.Interfaces;
-using MovieFinder.Common;
 using MovieFinder.Common.Enums;
 using MovieFinder.Dal;
 using MovieFinder.Dal.Models;
@@ -61,18 +60,12 @@ namespace MovieFinder.Business.Services
 
         public async Task<AggregatedMovieResult> GetImdbMovie(string imdbId)
         {
-            AggregatedMovieResult result = null;
-
-            result = GetCachedResult(imdbId);
-
-            if (result is null)
-            {
-                result = await GetSavedResult(imdbId);
-            }
-            else
+            if (_cache.TryGetValue(imdbId, out AggregatedMovieResult result))
             {
                 return result;
             }
+
+            result = await GetSavedResult(imdbId);
 
             if (result is null)
             {
@@ -88,11 +81,6 @@ namespace MovieFinder.Business.Services
             CacheResult(result);
 
             return result;
-        }
-
-        private AggregatedMovieResult GetCachedResult(string imdbId)
-        {
-             return _cache.Get<AggregatedMovieResult>(imdbId);
         }
 
         private async Task<AggregatedMovieResult> GetSavedResult(string imdbId)
@@ -220,13 +208,19 @@ namespace MovieFinder.Business.Services
 
         private void CacheResult(AggregatedMovieResult result)
         {
-            _cache.Set(result.Id, result);
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15),
+                Priority = CacheItemPriority.Normal,
+                Size = 1
+            };
+
+            _cache.Set(result.Id, result, options);
         }
 
         private async Task SaveResultAsync(AggregatedMovieResult aggregatedMovieResult)
         {
             // TODO: add additional fields to the database.
-            // TODO: make certain fields unique
             var movie = new Movie
             {
                 Name = aggregatedMovieResult.FullTitle,

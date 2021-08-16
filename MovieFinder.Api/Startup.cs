@@ -40,6 +40,11 @@ namespace MovieFinder.Api
             services.Configure<ApiKeys>(Configuration.GetSection("ApiKeys"));
 
             services.RegisterServices();
+            services.AddMemoryCache(options =>
+            {
+                options.SizeLimit = 4096;
+                options.CompactionPercentage = 0.33d;
+            });
             services.AddHttpClient();
         }
 

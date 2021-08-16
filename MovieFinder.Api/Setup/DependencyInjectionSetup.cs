@@ -10,8 +10,7 @@ namespace MovieFinder.Api.Setup
         public static void RegisterServices(this IServiceCollection services)
         {
             services
-                .AddTransient<IMovieService, MovieService>()
-                .AddSingleton<IMemoryCache, MemoryCache>();
+                .AddTransient<IMovieService, MovieService>();
         }
     }
 }
