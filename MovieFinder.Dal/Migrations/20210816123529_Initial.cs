@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MovieFinder.Dal.Migrations
 {
@@ -12,13 +13,14 @@ namespace MovieFinder.Dal.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ImdbId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImdbId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     MovieName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReleaseYear = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ImdbData", x => x.Id);
+                    table.UniqueConstraint("AK_ImdbData_ImdbId", x => x.ImdbId);
                 });
 
             migrationBuilder.CreateTable(
@@ -28,7 +30,9 @@ namespace MovieFinder.Dal.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImdbDataId = table.Column<int>(type: "int", nullable: false)
+                    ImdbDataId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Modified = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -37,8 +41,8 @@ namespace MovieFinder.Dal.Migrations
                         name: "FK_Movies_ImdbData_ImdbDataId",
                         column: x => x.ImdbDataId,
                         principalTable: "ImdbData",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "ImdbId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -65,10 +69,17 @@ namespace MovieFinder.Dal.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_ImdbData_ImdbId",
+                table: "ImdbData",
+                column: "ImdbId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Movies_ImdbDataId",
                 table: "Movies",
                 column: "ImdbDataId",
-                unique: true);
+                unique: true,
+                filter: "[ImdbDataId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VideoData_MovieId",
