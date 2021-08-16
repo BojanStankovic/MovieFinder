@@ -121,22 +121,8 @@ namespace MovieFinder.Business.Services
 
         private async Task<AggregatedMovieResult> GetNewResult(string imdbId)
         {
-            // string requestUrl = UrlBuilders.BuildImdbRequestUrl("Title", imdbId, _imdbApiKey);
-            // var result = await GetResponseFromImdb<AggregatedMovieResult>(requestUrl);
-            
-            // Test data to prevent too many requests to IMDB API during development phase (limited to 100/day)
-            var result = new AggregatedMovieResult
-            {
-                Id = "tt1375666",
-                Title = "Inception",
-                FullTitle = "Inception (2010)",
-                Type = "Movie",
-                Year = "2010",
-                Plot = "Dom Cobb is a skilled thief...",
-                Genres = "Action, Adventure, Sci-Fi",
-                Countries = "USA, UK",
-                ErrorMessage = ""
-            };
+            string requestUrl = UrlBuilders.BuildImdbRequestUrl("Title", imdbId, _imdbApiKey);
+            var result = await GetResponseFromImdb<AggregatedMovieResult>(requestUrl);
 
             var youtubeTrailers = await GetYoutubeTrailers($"{result.Title} {result.Year}");
 
