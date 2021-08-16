@@ -49,13 +49,13 @@ namespace MovieFinder.Business.Services
             _cachePriority = cacheSettings?.Value?.Priority ?? CacheItemPriority.Normal;
         }
 
-        public async Task<ImdbTitleResults> GetListOfImdbTitles(string movieTitle, int? year = null)
+        public async Task<ImdbTitleResults> GetListOfImdbTitles(GetMovieListRequestDto requestModel)
         {
-            string requestUrl = UrlBuilders.BuildImdbRequestUrl("SearchTitle", movieTitle, _imdbApiKey);
+            string requestUrl = UrlBuilders.BuildImdbRequestUrl("SearchTitle", requestModel.MovieTitle, _imdbApiKey);
 
-            if (year.HasValue)
+            if (requestModel.MovieReleaseYear.HasValue)
             {
-                requestUrl += ($" {year}");
+                requestUrl += ($" {requestModel.MovieReleaseYear}");
             }
             
             var result = await GetResponseFromImdb<ImdbTitleResults>(requestUrl);
