@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieFinder.Dal;
 
 namespace MovieFinder.Dal.Migrations
 {
     [DbContext(typeof(MovieFinderDbContext))]
-    partial class MovieFinderDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210817104257_AddsRequestTrailerTable")]
+    partial class AddsRequestTrailerTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
