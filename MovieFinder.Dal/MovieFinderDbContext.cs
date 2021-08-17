@@ -16,14 +16,13 @@ namespace MovieFinder.Dal
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //Movie property configurations
             MoviesConfiguration.Configure(modelBuilder);
 
-            //ImdbData property configurations
             ImdbDataConfiguration.Configure(modelBuilder);
 
-            //VideoData property configurations
             VideoDataConfiguration.Configure(modelBuilder);
+
+            TrailerRequestDetailsConfiguration.Configure(modelBuilder);
         }
 
         public DbSet<Movie> Movies { get; set; }
@@ -31,5 +30,7 @@ namespace MovieFinder.Dal
         public DbSet<ImdbData> ImdbData { get; set; }
 
         public DbSet<VideoData> VideoData { get; set; }
+
+        public DbSet<TrailerRequestDetails> TrailerRequestDetails { get; set; }
     }
 }
