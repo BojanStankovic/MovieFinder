@@ -1,0 +1,81 @@
+{
+	"info": {
+		"_postman_id": "d0724e15-95bd-429e-a2db-7916cb28e9f3",
+		"name": "Dept",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "ImdbMovieTitles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{appUrl}}/movies?MovieTitle=star trek",
+					"host": [
+						"{{appUrl}}"
+					],
+					"path": [
+						"movies"
+					],
+					"query": [
+						{
+							"key": "MovieReleaseYear",
+							"value": "1801",
+							"disabled": true
+						},
+						{
+							"key": "MovieTitle",
+							"value": "star trek"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ImdbMovie",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{appUrl}}/movies/tt0796366",
+					"host": [
+						"{{appUrl}}"
+					],
+					"path": [
+						"movies",
+						"tt0796366"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RequestMovieTrailer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"imdbId\": \"tt0360043\",\r\n    \"firstName\": \"Bojan\",\r\n    \"lastName\": \"Stankovic\",\r\n    \"emailAddress\": \"bojan@gmail.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{appUrl}}/forms",
+					"host": [
+						"{{appUrl}}"
+					],
+					"path": [
+						"forms"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
